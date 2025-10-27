@@ -34,6 +34,7 @@ var POKE_INFO_ENDPOINT string = "https://pokeapi.co/api/v2/pokemon/"
 var CACHE pokecache.Cache
 
 var BEBES_PC map[string]*pokestructs.Pokemon
+var POKEDEX []*pokestructs.Pokemon
 
 func main() {
 
@@ -80,9 +81,16 @@ func main() {
 			config:      commandConfig{},
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "List the pokemon you've caught",
+			config:      commandConfig{},
+			callback:    commandPokedex,
+		},
 	}
 	CACHE = pokecache.NewCache(time.Minute * 5)
 	BEBES_PC = map[string]*pokestructs.Pokemon{}
+	POKEDEX = []*pokestructs.Pokemon{}
 
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -232,6 +240,7 @@ func commandCatch(params ...string) error {
 		fmt.Printf("%s was caught!\n", pokemonName)
 		BEBES_PC[pokemonName] = &pokemonInfo
 		BEBES_PC[fmt.Sprintf("%d", pokemonInfo.ID)] = &pokemonInfo
+		POKEDEX = append(POKEDEX, &pokemonInfo)
 	} else {
 		fmt.Printf("%s escaped!\n", pokemonName)
 	}
@@ -265,6 +274,21 @@ Weight: %d
 	for _, typeObj := range pokemon.Types {
 		fmt.Printf("\t-%s\n", typeObj.Type.Name)
 	}
+	fmt.Println()
+
+	return nil
+}
+func commandPokedex(params ...string) error {
+	if len(POKEDEX) == 0 {
+		fmt.Print("You haven't caught any Pokemon!\n")
+		return nil
+	}
+
+	fmt.Print("\nYour Pokedex:")
+	for _, pokemon := range POKEDEX {
+		fmt.Printf("\n\t- %s", pokemon.Name)
+	}
+	fmt.Println()
 	fmt.Println()
 
 	return nil
